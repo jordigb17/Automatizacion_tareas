@@ -3,6 +3,10 @@ import json
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import sys
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QWidget,QInputDialog, QMessageBox)
 
 # Configuración de correo
 EMAIL_CONFIG = {
@@ -14,7 +18,7 @@ EMAIL_CONFIG = {
 }
 
 # Ruta absoluta donde guardar el archivo .json
-EMPLOYEE_FILE = '(poner ruta absoluta) /info_empleados.json'
+EMPLOYEE_FILE = '/root/Repositorios/Automatizacion_tareas/info_empleados.json'
 
 # ------------------------- Clases -------------------------
 
@@ -40,15 +44,20 @@ class EmployeeManager:
         with open(self.employee_file, 'w') as file:
             json.dump(self.employees, file, indent=2)
     
-    def add_employee(self, username, email):
+    def add_employee(self):
         """Añade emplados al archivo"""
-        self.employees[username] = email
+        username, ok = QInputDialog.getText(None, 'Añadir Empleado', 'Indique el nombre del usuario junto con la primera letra de los apellidos:')
+        if ok:
+            email, ok = QInputDialog.getText(None, 'Añadir Empleado', 'Introduce el correo del usuario:')  
+        self.employees[username.lower()] = email
         print(f'Empleado {username} añadido correctamente.')
 
     def list_employees(self):
         """Lista los empleados guardados"""
-        for i, (username, email) in enumerate(self.employees.items(), start=1):
-            print(f"{i}. {username} - {email}")
+        
+        employees_text = '\n'.join(self.employees)
+        QMessageBox.information(None, 'Lista de Empleados', employees_text)
+
 
 
 class TaskManager:
@@ -153,8 +162,87 @@ class ReminderService:
                     message = (f"Hola, recuerda que la tarea '{task['task']}' vence el {task['due_date']}.")
                     self.email_notifier.send_email(email, message)
 
+
+class ModernWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.employee_manager = EmployeeManager(EMPLOYEE_FILE)
+        self.email_notifier = EmailNotifier(EMAIL_CONFIG)
+        self.reminder_service = ReminderService(self.employee_manager, self.email_notifier)
+        
+        # Configuración de la ventana principal
+        self.setWindowTitle('Automatización de tareas')
+        self.setGeometry(100, 100, 800, 600)
+        self.setStyleSheet('background-color: #D5BA98;')
+       
+        # Configuración del contenedor principal
+        container = QWidget()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
+
+        # Etiqueta de título
+        title = QLabel('Bienvenido al gestor de tareas automatizado')
+        title.setFont(QFont('Arial', 40, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
+        layout.addWidget(title)
+        
+        # Subtítulo
+        subtitle = QLabel('Menú principal')
+        subtitle.setFont(QFont("Arial", 20))
+        subtitle.setAlignment(Qt.AlignCenter)
+        layout.addWidget(subtitle)
+        
+        # Botones organizados en un diseño vertical
+        button_layout = QVBoxLayout()
+        button_layout.setSpacing(20)
+
+        self.button1 = QPushButton("Añadir empleado")
+        self.button1.setStyleSheet("padding: 10px; font-size: 16px; background-color: #000000; color: white; border-radius: 5px;")
+        self.button1.clicked.connect(self.employee_manager.add_employee)
+        
+        self.button2 = QPushButton("Listar empleados")
+        self.button2.setStyleSheet("padding: 10px; font-size: 16px; background-color: #000000; color: white; border-radius: 5px;")
+        self.button2.clicked.connect(self.employee_manager.list_employees)
+        
+       
+        
+
+        button_layout.addWidget(self.button1)
+        button_layout.addWidget(self.button2)
+        
+        layout.addLayout(button_layout)
+        
+        
+
+        # Pie de página
+        footer = QLabel("© 2025 Mi Aplicación. Todos los derechos reservados.")
+        footer.setFont(QFont("Arial", 10))
+        footer.setAlignment(Qt.AlignCenter)
+        footer.setStyleSheet("color: gray;")
+        layout.addWidget(footer)
+
+        # Aplicar el diseño al contenedor principal
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+
+
+
+if __name__ == "__main__":
+    employee_manager = EmployeeManager(EMPLOYEE_FILE)
+    email_notifier = EmailNotifier(EMAIL_CONFIG)
+    reminder_service = ReminderService(employee_manager, email_notifier)
+
+    app = QApplication(sys.argv)
+    window = ModernWindow()
+    window.show()
+    sys.exit(app.exec_())
+
 # ------------------------- Menús -------------------------
 
+quit()
 def main_menu():
     employee_manager = EmployeeManager(EMPLOYEE_FILE)
     email_notifier = EmailNotifier(EMAIL_CONFIG)
