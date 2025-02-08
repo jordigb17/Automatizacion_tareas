@@ -3,18 +3,22 @@ import json
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import sys
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QInputDialog, QMessageBox, QProgressDialog)
 
 # Configuración de correo
 EMAIL_CONFIG = {
-    'from_email': ' correo del emisor ',
-    'password': ' contraseña del correo ',
-    'smtp_server': 'smtp.gmail.com',
-    'smtp_port': 587,
+    'from_email': ' Introducir correo del emisor ',
+    'password': ' Introducir contraseña del correo ',
+    'smtp_server': 'smtp.gmail.com', # Servidor por el que se mandan los correos
+    'smtp_port': 587, # Puerto de conexión con el servidor
     'subject': 'Recordatorio de tarea',
 }
 
 # Ruta absoluta donde guardar el archivo .json
-EMPLOYEE_FILE = '(poner ruta absoluta) /info_empleados.json'
+EMPLOYEE_FILE = '/root/Repositorios/Automatizacion_tareas/info_empleados.json'
 
 # ------------------------- Clases -------------------------
 
@@ -27,6 +31,8 @@ class EmployeeManager:
     
     def load_employees(self):
         """Abre el archivo.json donde se encuentran los empleados y sus correos"""
+        #OUTPUT
+        #-Devuelve un diccionario con los empleados y sus correos
         try:
             with open(self.employee_file, 'r') as file:
                 return json.load(file)
@@ -40,26 +46,31 @@ class EmployeeManager:
         with open(self.employee_file, 'w') as file:
             json.dump(self.employees, file, indent=2)
     
-    def add_employee(self, username, email):
+    def add_employee(self):
         """Añade emplados al archivo"""
-        self.employees[username] = email
-        print(f'Empleado {username} añadido correctamente.')
+        username, ok = QInputDialog.getText(None, 'Añadir Empleado', 'Indique el nombre del usuario junto con la primera letra de los apellidos:')
+        if ok:
+            email, ok = QInputDialog.getText(None, 'Añadir Empleado', 'Introduce el correo del usuario:')
+            if ok: 
+                self.employees[username.lower()] = email
 
     def list_employees(self):
-        """Lista los empleados guardados"""
-        for i, (username, email) in enumerate(self.employees.items(), start=1):
-            print(f"{i}. {username} - {email}")
+        """Lista los empleados guardados""" 
+        employees_text = '\n'.join(f"{i + 1}. {name} - {email}" for i, (name, email) in enumerate(self.employees.items()))
+        QMessageBox.information(None, 'Lista de Empleados', employees_text)
 
 
 class TaskManager:
     """Gestión de tareas."""
     
     def __init__(self, employee_name):
-        self.task_file = f'/root/Primer-repositorio/{employee_name}.json'
+        self.task_file = f'/root/Repositorios/Automatizacion_tareas/{employee_name}.json'
         self.tasks = self.load_tasks()
     
     def load_tasks(self):
         """Abre el archivo.json donde se encuentran las tareas"""
+        #OUTPUT
+        #-Devuelve una lista con las tareas
         try:
             with open(self.task_file, 'r') as file:
                 return json.load(file)
@@ -73,41 +84,54 @@ class TaskManager:
         with open(self.task_file, 'w') as file:
             json.dump(self.tasks, file, indent=2)
     
-    def add_task(self, task_name, priority, due_date):
+    def add_task(self):
         """Añade tareas a la lista"""
-        task = {
-            'task': task_name,
-            'priority': priority,
-            'due_date': due_date,
-            'status': 'Pendiente',
-        }
+        task_name, ok = QInputDialog.getText(None, 'Añadir Tarea', 'Indique el nombre de la tarea:')
+        if ok:
+            priority, ok = QInputDialog.getText(None, 'Añadir Tarea', 'Indique prioridad (1.Alta, 2.Media, 3.Baja):') 
+            if ok:
+                due_date, ok = QInputDialog.getText(None, 'Añadir Tarea', 'Introduce la fecha de de vencimineto (dd-mm-yy):')
+                if ok:                    
+                    task = {
+                        'task': task_name,
+                        'priority': priority,
+                        'due_date': due_date,
+                        'status': 'Pendiente',
+                    }
         self.tasks.append(task)
-        self.tasks.sort(key=lambda t: (datetime.strptime(t['due_date'], '%d-%m-%y'), -int(t['priority'])))
-        print('Tarea añadida correctamente.')
+        self.tasks.sort(key=lambda t: (datetime.strptime(t['due_date'], '%d-%m-%y'), int(t['priority'])))
+        
     
-    def complete_task(self, task_index):
+    def complete_task(self):
         """Completa las tareas de la lista"""
-        if 0 <= task_index < len(self.tasks):
-            self.tasks[task_index]['status'] = 'Completada'
-            print('Tarea marcada como completada.')
-        else:
-            print('Índice de tarea no válido.')
+        task_index, ok = QInputDialog.getInt(None, 'Añadir Tarea', 'Indique el número de la tarea:')
+        if ok and 0 < task_index <= len(self.tasks):
+            self.tasks[task_index - 1]['status'] = 'Completada'
+        elif ok and (0 == task_index or task_index > len(self.tasks)):
+            msg = QMessageBox()
+            msg.setWindowTitle('Error')  # Título del mensaje     
+            msg.setText('Número introducido no válido.')  # Contenido del mensaje
+            msg.setIcon(QMessageBox.Critical)  # Tipo de mensaje: Error
+            msg.setStandardButtons(QMessageBox.Ok)  # Botón de cierre
+            msg.exec_()  # Muestra el cuadro de diálogo
     
-    def delete_task(self, task_index):
+    def delete_task(self):
         """Elimina las tareas de la lista"""
-        if 0 <= task_index < len(self.tasks):
-            del self.tasks[task_index]
-            print('Tarea eliminada correctamente.')
-        else:
-            print('Índice de tarea no válido.')
+        task_index, ok = QInputDialog.getInt(None, 'Eliminar Tarea', 'Indique el número de la tarea:')
+        if 0 < task_index <= len(self.tasks):
+            del self.tasks[task_index - 1]
+        elif ok and (0 == task_index or task_index > len(self.tasks)):
+            msg = QMessageBox()
+            msg.setWindowTitle('Error')  # Título del mensaje     
+            msg.setText('Número introducido no válido.')  # Contenido del mensaje
+            msg.setIcon(QMessageBox.Critical)  # Tipo de mensaje: Error
+            msg.setStandardButtons(QMessageBox.Ok)  # Botón de cierre
+            msg.exec_()  # Muestra el cuadro de diálogo
     
     def list_tasks(self):
         """Enumera todas las tareas que hay en la lista"""
-        for i, task in enumerate(self.tasks, start=1):
-            print(
-                f'{i}. {task['task']} | Prioridad: {task['priority']} | '
-                f'Vence: {task['due_date']} | Estado: {task['status']}'
-            )
+        tasks_text = '\n'.join(f"{i + 1}. {task['task']} | Prioridad: {task['priority']} | {task['due_date']} | Estado: {task['status']}" for i, task in enumerate(self.tasks))
+        QMessageBox.information(None, 'Lista de Tareas', tasks_text)
 
 
 class EmailNotifier:
@@ -130,20 +154,37 @@ class EmailNotifier:
             server.login(self.config['from_email'], self.config['password'])
             server.send_message(msg)
             server.quit()
-            print(f'Correo enviado a {to_email}')
+            # Crear mensaje de información
+            msg = QMessageBox()
+            msg.setWindowTitle("Información")  # Título del mensaje     
+            msg.setText(f'Correo enviado a {to_email}')  # Contenido del mensaje
+            msg.setIcon(QMessageBox.Information)  # Tipo de mensaje: Información
+            msg.setStandardButtons(QMessageBox.Ok)  # Botón de cierre
+            msg.exec_()  # Muestra el cuadro de diálogo
         except Exception as e:
-            print(f'Error al enviar correo: {e}')
+            msg = QMessageBox()
+            msg.setWindowTitle("Error")  # Título del mensaje     
+            msg.setText("f'Error al enviar correo: {e}'")  # Contenido del mensaje
+            msg.setIcon(QMessageBox.Critical)  # Tipo de mensaje: Error
+            msg.setStandardButtons(QMessageBox.Ok)  # Botón de cierre
+            msg.exec_()  # Muestra el cuadro de diálogo
+        
 
 
 class ReminderService:
-    """Servicio para verificar y enviar recordatorios de tareas."""
-    
+    """Servicio para verificar y enviar recordatorios de tareas."""   
     def __init__(self, employee_manager, email_notifier):
         self.employee_manager = employee_manager
         self.email_notifier = email_notifier
-    
+   
     def check_and_notify(self):
         """Repasa todas las tareas de cada usuario, si estan pendientes y falta menos de 1 dia envia el correo"""
+        progress = QProgressDialog("Revisando tareas y enviando notificaciones...", None, 0, 0)
+        progress.setWindowTitle("Procesando")
+        progress.setWindowModality(Qt.ApplicationModal)
+        progress.setCancelButton(None)
+        progress.show()
+
         current_date = datetime.now()
         for employee, email in self.employee_manager.employees.items():
             task_manager = TaskManager(employee)
@@ -153,77 +194,218 @@ class ReminderService:
                     message = (f"Hola, recuerda que la tarea '{task['task']}' vence el {task['due_date']}.")
                     self.email_notifier.send_email(email, message)
 
-# ------------------------- Menús -------------------------
+        progress.close()  # Cierra el cuadro cuando termina
 
-def main_menu():
-    employee_manager = EmployeeManager(EMPLOYEE_FILE)
-    email_notifier = EmailNotifier(EMAIL_CONFIG)
-    reminder_service = ReminderService(employee_manager, email_notifier)
+        QMessageBox.information(None, "Proceso Completo", "Las notificaciones han sido enviadas.")
+
+
+class MainMenu(QMainWindow): # Clase para crear la ventana principal
+    def __init__(self):
+        super().__init__()
+        # Inicializar las clases anteriores
+        self.employee_manager = EmployeeManager(EMPLOYEE_FILE)
+        self.email_notifier = EmailNotifier(EMAIL_CONFIG)
+        self.reminder_service = ReminderService(self.employee_manager, self.email_notifier)
+
+        # Configuración de la ventana principal
+        self.setWindowTitle('Automatización de tareas')
+        self.setGeometry(100, 100, 800, 600)
+        self.setStyleSheet('background-color: #2C2F33;')
+       
+        # Configuración del contenedor principal
+        container = QWidget()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
+
+        # Etiqueta de título
+        title = QLabel('Bienvenido al gestor de tareas automatizado')
+        title.setFont(QFont('Arial', 32, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("color: #FFFFFF;")
+        layout.addWidget(title)
+        
+        # Subtítulo
+        subtitle = QLabel('Menú principal')
+        subtitle.setFont(QFont("Arial", 18))
+        subtitle.setAlignment(Qt.AlignCenter)
+        subtitle.setStyleSheet("color: #BBBBBB;")
+        layout.addWidget(subtitle)
+        
+        # Botones organizados en un diseño vertical
+        button_layout = QVBoxLayout()
+        button_layout.setSpacing(15)
+        
+        button_style = """
+            QPushButton {
+                padding: 12px;
+                font-size: 16px;
+                background-color: #7289DA;
+                color: white;
+                border-radius: 8px;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #5B6EAE;
+            }
+            QPushButton:pressed {
+                background-color: #47568C;
+            }
+        """
+        
+        # Añadir botones y sus resoectivas funciones
+        self.button1 = QPushButton("Añadir empleado")
+        self.button1.setStyleSheet(button_style)
+        self.button1.clicked.connect(self.employee_manager.add_employee)
+        
+        self.button2 = QPushButton("Listar empleados")
+        self.button2.setStyleSheet(button_style)
+        self.button2.clicked.connect(self.employee_manager.list_employees)
+        
+        self.button3 = QPushButton("Gestionar tareas de un empleado")
+        self.button3.setStyleSheet(button_style)
+        self.button3.clicked.connect(self.open_task_menu)  
+
+        self.button4 = QPushButton("Verificar y enviar recordatorios")
+        self.button4.setStyleSheet(button_style)
+        self.button4.clicked.connect(self.reminder_service.check_and_notify)  
+
+        self.button5 = QPushButton("Salir y guardar cambios")
+        self.button5.setStyleSheet(button_style)
+        self.button5.clicked.connect(self.exit_app)  
+
+        button_layout.addWidget(self.button1)
+        button_layout.addWidget(self.button2)
+        button_layout.addWidget(self.button3)
+        button_layout.addWidget(self.button4)
+        button_layout.addWidget(self.button5)
+        layout.addLayout(button_layout)
+
+        # Pie de página
+        footer = QLabel("© 2025 Mi Aplicación. Todos los derechos reservados.")
+        footer.setFont(QFont("Arial", 10))
+        footer.setAlignment(Qt.AlignCenter)
+        footer.setStyleSheet("color: #888888;")
+        layout.addWidget(footer)
+
+        # Aplicar el diseño al contenedor principal
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+    def open_task_menu(self):
+        """ Función para abrir la ventana TaskMenu """
+        employee_name, ok = QInputDialog.getText(None, 'Accediendo a empleado', 'Indique el nombre del usuario junto con la primera letra de los apellidos:')
+        if ok and employee_name in self.employee_manager.employees:
+            self.task_manager = TaskManager(employee_name)
+            self.task_menu = TaskMenu(employee_name)  # Crear instancia de TaskMenu
+            self.task_menu.show()  # Mostrar la ventana
+        elif employee_name not in self.employee_manager.employees:
+            msg = QMessageBox()
+            msg.setWindowTitle("Error")  # Título del mensaje     
+            msg.setText("El empleado no está añadido a la lista principal.")  # Contenido del mensaje
+            msg.setIcon(QMessageBox.Critical)  # Tipo de mensaje: Error
+            msg.setStandardButtons(QMessageBox.Ok)  # Botón de cierre
+            msg.exec_()  # Muestra el cuadro de diálogo
     
-    while True:
-        print('\n--- Menú Principal ---')
-        print('1. Añadir empleado')
-        print('2. Listar empleados')
-        print('3. Gestionar tareas de un empleado')
-        print('4. Verificar y enviar recordatorios')
-        print('5. Salir')
-        
-        choice = input('Selecciona una opción: ')
-        
-        if choice == '1':
-            username = input('Indique el nombre del usuario junto con la primera letra de los apellidos: ')
-            email = input('Correo del usuario: ')
-            employee_manager.add_employee(username.lower(), email)
-        elif choice == '2':
-            employee_manager.list_employees()
-        elif choice == '3':
-            username = input('Nombre de usuario: ')
-            if username in employee_manager.employees:
-                task_menu(username)
-            else:
-                print('Empleado no encontrado.')
-        elif choice == '4':
-            reminder_service.check_and_notify()
-        elif choice == '5':
-            employee_manager.save_employees()
-            print('Adiós.')
-            break
-        else:
-            print('Opción no válida.')
+    def exit_app(self):
+        """Función que guarda el archivo.json de los empleados y sale de la app"""
+        self.employee_manager.save_employees()
+        sys.exit()
 
-def task_menu(username):
-    task_manager = TaskManager(username)
+
+class TaskMenu(QWidget):
+    def __init__(self, employee_name):
+        super().__init__()    
+        self.task_manager = TaskManager(employee_name) 
+        
+        # Configuración de la ventana principal
+        self.setWindowTitle('Automatización de tareas')
+        self.setGeometry(100, 100, 800, 600)
+        self.setStyleSheet('background-color: #2C2F33;')
+       
+        # Configuración del contenedor principal
+        layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
+
+        # Etiqueta de título
+        title = QLabel(f'Menú de tareas de {employee_name}')
+        title.setFont(QFont('Arial', 32, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("color: #FFFFFF;")
+        layout.addWidget(title)
+        
+        # Botones organizados en un diseño vertical
+        button_layout = QVBoxLayout()
+        button_layout.setSpacing(15)
+        
+        button_style = """
+            QPushButton {
+                padding: 12px;
+                font-size: 16px;
+                background-color: #7289DA;
+                color: white;
+                border-radius: 8px;
+                border: none;
+            }
+            QPushButton:hover {
+                background-color: #5B6EAE;
+            }
+            QPushButton:pressed {
+                background-color: #47568C;
+            }
+        """
+
+        #Añadir botones y sus respectivas funciones
+        self.button1 = QPushButton("Añadir tarea")
+        self.button1.setStyleSheet(button_style)
+        self.button1.clicked.connect(self.task_manager.add_task)
+
+        self.button2 = QPushButton("Completar tarea")
+        self.button2.setStyleSheet(button_style)
+        self.button2.clicked.connect(self.task_manager.complete_task)
+
+        self.button3 = QPushButton("Eliminar tarea")
+        self.button3.setStyleSheet(button_style)
+        self.button3.clicked.connect(self.task_manager.delete_task)
+
+        self.button4 = QPushButton("Listar tareas")
+        self.button4.setStyleSheet(button_style)
+        self.button4.clicked.connect(self.task_manager.list_tasks)
+
+        self.button5 = QPushButton("Volver al menú principal")
+        self.button5.setStyleSheet(button_style)
+        self.button5.clicked.connect(self.exit_taskmenu)
+
+        button_layout.addWidget(self.button1)
+        button_layout.addWidget(self.button2)
+        button_layout.addWidget(self.button3)
+        button_layout.addWidget(self.button4)
+        button_layout.addWidget(self.button5)
+        layout.addLayout(button_layout)
+
+        # Pie de página
+        footer = QLabel("© 2025 Mi Aplicación. Todos los derechos reservados.")
+        footer.setFont(QFont("Arial", 10))
+        footer.setAlignment(Qt.AlignCenter)
+        footer.setStyleSheet("color: #888888;")
+        layout.addWidget(footer)
+
+        # Aplicar el diseño al contenedor principal
+        self.setLayout(layout)
     
-    while True:
-        print('\n--- Menú de Tareas ---')
-        print('1. Añadir tarea')
-        print('2. Completar tarea')
-        print('3. Eliminar tarea')
-        print('4. Listar tareas')
-        print('5. Volver al menú principal')
-        
-        choice = input('Selecciona una opción: ')
-        
-        if choice == '1':
-            task_name = input('Descripción de la tarea: ')
-            priority = input('Prioridad (1. Alta, 2. Media, 3. Baja): ')
-            due_date = input('Fecha de vencimiento (dd-mm-yy): ')
-            task_manager.add_task(task_name, priority, due_date)
-        elif choice == '2':
-            task_manager.list_tasks()
-            task_index = int(input('Índice de la tarea a completar: ')) - 1
-            task_manager.complete_task(task_index)
-        elif choice == '3':
-            task_manager.list_tasks()
-            task_index = int(input('ndice de la tarea a eliminar: ')) - 1
-            task_manager.delete_task(task_index)
-        elif choice == '4':
-            task_manager.list_tasks()
-        elif choice == '5':
-            task_manager.save_tasks()
-            break
-        else:
-            print('Opción no válida.')
+    def exit_taskmenu(self):
+        """Función para guardar el archivo de tareas y salir a la ventana principal"""
+        self.task_manager.save_tasks()
+        self.close()
 
-if __name__ == '__main__':
-    main_menu()
+# Si se abre el programa como principal entonces se ejecuta 
+if __name__ == "__main__":
+
+    app = QApplication(sys.argv)
+    window = MainMenu()
+    window.show()
+    sys.exit(app.exec_())
+
+
+
