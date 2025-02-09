@@ -10,15 +10,15 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, QPushButton, QVB
 
 # Configuración de correo
 EMAIL_CONFIG = {
-    'from_email': ' Introducir correo del emisor ',
-    'password': ' Introducir contraseña del correo ',
+    'from_email': ' Introducir correo del emisor ', # RELLENAR
+    'password': ' Introducir contraseña del correo ', # RELLENAR
     'smtp_server': 'smtp.gmail.com', # Servidor por el que se mandan los correos
     'smtp_port': 587, # Puerto de conexión con el servidor
     'subject': 'Recordatorio de tarea',
 }
 
 # Ruta absoluta donde guardar el archivo .json
-EMPLOYEE_FILE = '/root/Repositorios/Automatizacion_tareas/info_empleados.json'
+EMPLOYEE_FILE = '(Poner ruta donde quieres que se gurade) /info_empleados.json' # RELLENAR
 
 # ------------------------- Clases -------------------------
 
@@ -64,7 +64,7 @@ class TaskManager:
     """Gestión de tareas."""
     
     def __init__(self, employee_name):
-        self.task_file = f'/root/Repositorios/Automatizacion_tareas/{employee_name}.json'
+        self.task_file = f' (Poner ruta donde quieres que se gurade) /{employee_name}.json' # RELLENAR
         self.tasks = self.load_tasks()
     
     def load_tasks(self):
