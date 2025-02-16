@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, QPushButton, QVB
 # Configuración de correo
 EMAIL_CONFIG = {
     'from_email': ' Introducir correo del emisor ', # RELLENAR
-    'password': ' Introducir contraseña del correo ', # RELLENAR
+    'password': ' Introducir contraseña de aplicación (IMPORTANTE) del correo ', # RELLENAR
     'smtp_server': 'smtp.gmail.com', # Servidor por el que se mandan los correos
     'smtp_port': 587, # Puerto de conexión con el servidor
     'subject': 'Recordatorio de tarea',
