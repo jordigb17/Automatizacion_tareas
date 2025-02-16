@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 # Configuración de correo
 EMAIL_CONFIG = {
     'from_email': ' correo del emisor ', # RELLENAR
-    'password': ' contraseña del correo ', # RELLENAR
+    'password': ' contraseña de aplicación (IMPORTANTE) del correo ', # RELLENAR
     'smtp_server': 'smtp.gmail.com',
     'smtp_port': 587,
     'subject': 'Recordatorio de tarea',
