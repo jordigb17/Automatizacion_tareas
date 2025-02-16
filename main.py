@@ -18,7 +18,7 @@ EMAIL_CONFIG = {
 }
 
 # Ruta absoluta donde guardar el archivo .json
-EMPLOYEE_FILE = '(Poner ruta donde quieres que se gurade) /info_empleados.json' # RELLENAR
+EMPLOYEE_FILE = '/(Introducir ruta absoluta donde quieres que se guarde)/info_empleados.json' # RELLENAR
 
 # ------------------------- Clases -------------------------
 
@@ -64,7 +64,7 @@ class TaskManager:
     """Gestión de tareas."""
     
     def __init__(self, employee_name):
-        self.task_file = f' (Poner ruta donde quieres que se gurade) /{employee_name}.json' # RELLENAR
+        self.task_file = f'/(Introducir ruta absoluta donde quieres que se gurarde)/{employee_name}.json' # RELLENAR
         self.tasks = self.load_tasks()
     
     def load_tasks(self):
@@ -282,7 +282,7 @@ class MainMenu(QMainWindow): # Clase para crear la ventana principal
         layout.addLayout(button_layout)
 
         # Pie de página
-        footer = QLabel("© 2025 Mi Aplicación. Todos los derechos reservados.")
+        footer = QLabel("© 2025 Jordigb_17. Todos los derechos reservados.")
         footer.setFont(QFont("Arial", 10))
         footer.setAlignment(Qt.AlignCenter)
         footer.setStyleSheet("color: #888888;")
@@ -385,7 +385,7 @@ class TaskMenu(QWidget):
         layout.addLayout(button_layout)
 
         # Pie de página
-        footer = QLabel("© 2025 Mi Aplicación. Todos los derechos reservados.")
+        footer = QLabel("© 2025 Jordigb_17. Todos los derechos reservados.")
         footer.setFont(QFont("Arial", 10))
         footer.setAlignment(Qt.AlignCenter)
         footer.setStyleSheet("color: #888888;")

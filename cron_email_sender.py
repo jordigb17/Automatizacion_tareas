@@ -6,15 +6,15 @@ from email.mime.text import MIMEText
 
 # Configuración de correo
 EMAIL_CONFIG = {
-    'from_email': ' correo del emisor ',
-    'password': ' contraseña del correo ',
+    'from_email': ' correo del emisor ', # RELLENAR
+    'password': ' contraseña del correo ', # RELLENAR
     'smtp_server': 'smtp.gmail.com',
     'smtp_port': 587,
     'subject': 'Recordatorio de tarea',
 }
 
 # Ruta absoluta donde guardar el archivo .json
-employee_file = '(poner ruta absoluta) /info_empleados.json'
+employee_file = '(poner ruta absoluta) /info_empleados.json' # RELLENAR
 
 class EmailNotifier:
     """Clase para manejar notificaciones por correo."""
@@ -52,7 +52,7 @@ def load_employees(employee_file):
 
 def load_tasks(employee):
         """Abre el archivo.json donde se encuentran las tareas"""
-        task_file = f'/root/Primer-repositorio/{employee}.json'
+        task_file = f'/(poner ruta absoluta)/{employee}.json' # RELLENAR
         try:
             with open(task_file, 'r') as file:
                 return json.load(file)
