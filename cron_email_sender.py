@@ -3,18 +3,31 @@ import json
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import os
+from dotenv import load_dotenv
+
+#Cargar variables desde el archivo .env
+load_dotenv()
+
 
 # Configuración de correo
 EMAIL_CONFIG = {
+<<<<<<< HEAD
     'from_email': ' correo del emisor ', # RELLENAR
     'password': ' contraseña de aplicación (IMPORTANTE) del correo ', # RELLENAR
     'smtp_server': 'smtp.gmail.com',
     'smtp_port': 587,
+=======
+    'from_email': os.getenv('EMAIL_USER') , # RELLENAR con email que quieres que envie el correo
+    'password': os.getenv('PASS_USER'), # RELLENAR contraseña de aplicación
+    'smtp_server': 'smtp.gmail.com', # Servidor por el que se mandan los correos
+    'smtp_port': 587, # Puerto de conexión con el servidor
+>>>>>>> bc893c5 (Creando archivo .env)
     'subject': 'Recordatorio de tarea',
 }
 
 # Ruta absoluta donde guardar el archivo .json
-employee_file = '(poner ruta absoluta) /info_empleados.json' # RELLENAR
+employee_file = './info_empleados.json' # RELLENAR con ruta absoluta donnde estan los archivos .json
 
 class EmailNotifier:
     """Clase para manejar notificaciones por correo."""
@@ -52,7 +65,7 @@ def load_employees(employee_file):
 
 def load_tasks(employee):
         """Abre el archivo.json donde se encuentran las tareas"""
-        task_file = f'/(poner ruta absoluta)/{employee}.json' # RELLENAR
+        task_file = f'./{employee}.json' # RELLENAR con ruta absoluta donnde estan los archivos .json
         try:
             with open(task_file, 'r') as file:
                 return json.load(file)

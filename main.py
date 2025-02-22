@@ -4,21 +4,32 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import sys
+import os
+from dotenv import load_dotenv
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QInputDialog, QMessageBox, QProgressDialog)
 
+#Cargar variables desde el archivo .env
+load_dotenv()
+
+
 # Configuración de correo
 EMAIL_CONFIG = {
+<<<<<<< HEAD
     'from_email': ' Introducir correo del emisor ', # RELLENAR
     'password': ' Introducir contraseña de aplicación (IMPORTANTE) del correo ', # RELLENAR
+=======
+    'from_email': os.getenv('EMAIL_USER') , # RELLENAR con email que quieres que envie el correo
+    'password': os.getenv('PASS_USER'), # RELLENAR contraseña de aplicación
+>>>>>>> bc893c5 (Creando archivo .env)
     'smtp_server': 'smtp.gmail.com', # Servidor por el que se mandan los correos
     'smtp_port': 587, # Puerto de conexión con el servidor
     'subject': 'Recordatorio de tarea',
 }
 
 # Ruta absoluta donde guardar el archivo .json
-EMPLOYEE_FILE = '/(Introducir ruta absoluta donde quieres que se guarde)/info_empleados.json' # RELLENAR
+EMPLOYEE_FILE = './info_empleados.json' # RELLENAR con ruta absoluta si se uiere guardar en otro sitio
 
 # ------------------------- Clases -------------------------
 
@@ -64,7 +75,7 @@ class TaskManager:
     """Gestión de tareas."""
     
     def __init__(self, employee_name):
-        self.task_file = f'/(Introducir ruta absoluta donde quieres que se gurarde)/{employee_name}.json' # RELLENAR
+        self.task_file = f'./{employee_name}.json' # RELLENAR con ruta absoluta si se quiere guardar en otro sitio
         self.tasks = self.load_tasks()
     
     def load_tasks(self):
